@@ -29,7 +29,7 @@ class MobileDataLabel {
         if (netIcon._mainConnection.type == "gsm") {
             netIcon.insert_child_at_index(this._label, 0);
             this._label.set_margin_left(6);
-            this._label.set_text("LTE");
+            this._label.set_text("LTE"); //TODO: replace with real info
         } else {
             netIcon.remove_child(this._label);
         }
