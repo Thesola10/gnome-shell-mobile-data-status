@@ -13,6 +13,8 @@ const MM_MODEM_SERVICE = 'org.freedesktop.ModemManager1.Modem'
 const MM_PATH = '/org/freedesktop/ModemManager1'
 const MM_MODEM_PFX = '/org/freedesktop/ModemManager1/Modem'
 
+
+
 /**
  * @param {?number} MMModemAccessTechnology enum value representing
  *                  the network type to display.
@@ -39,21 +41,29 @@ function _labelFromId(label) {
     }
 }
 
+const MMModem = GObject.registerClass({
+    GTypeName: "MMModem",
+    Implements: [Gio.DBusInterface],
+    Properties: {},
+    Signals: {}
+},
 class MMModem extends Gio.DBusProxy {
     _init(opath) {
         super._init({
-            g_bus_type: Gio.BusType.SYSTEM,
+            g_connection: Gio.DBus.system,
             g_name: MM_SERVICE,
             g_object_path: opath,
             g_interface_name: 'org.freedesktop.DBus.Properties',
-            g_flags: Gio.DBusProxyFlags.NONE
         });
     }
 
     async getConnType() {
         const pif = await new Promise((resolve, reject) => {
             this.call('Get',
-                'AccessTechnologies',
+                new GLib.Variant('(ss)', [
+                    MM_MODEM_SERVICE,
+                    'AccessTechnologies'
+                ]),
                 Gio.DBusCallFlags.NONE,
                 -1, null,
                 (proxy, res) => {
@@ -66,9 +76,10 @@ class MMModem extends Gio.DBusProxy {
                     }
                 });
         });
+        console.log(pif)
         return _labelFromId(pif);
     }
-}
+})
 
 var ModemManager = GObject.registerClass({
     GTypeName: 'ModemManager',
@@ -79,14 +90,17 @@ var ModemManager = GObject.registerClass({
 class MManager extends Gio.DBusProxy {
     _init() {
         super._init({
-            g_bus_type: Gio.BusType.SYSTEM,
+            g_connection: Gio.DBus.system,
+            //g_bus_type: Gio.BusType.SYSTEM,
             g_name: MM_SERVICE,
             g_object_path: MM_PATH,
             g_interface_name: 'org.freedesktop.DBus.ObjectManager',
-            g_flags: Gio.DBusProxyFlags.NONE
         });
     }
+    
     async getModem() {
+        //await _proxyInit(this);
+
         const objs = await new Promise((resolve, reject) => {
             this.call('GetManagedObjects',
                 null,
@@ -104,12 +118,9 @@ class MManager extends Gio.DBusProxy {
         });
 
         for (const [opath, obj] of Object.entries(objs)) {
-            print(opath)
             if (opath.startsWith(MM_MODEM_PFX)) {
                 return new MMModem(opath);
             }
         }
     }
 });
-
-
