@@ -51,6 +51,10 @@ class MobileDataLabel {
                 netIcon._client.connect('notify::primary-connection', () => this.updateIndicatorDisplay()
             ));
         this.connectModem().then(console.log("Modem events connected"))
+
+        // if we were enabled after session start, e.g. thru extension manager
+        if (netIcon._mainConnection != null)
+            this.updateIndicatorDisplay();
     }
 
     disable() {
