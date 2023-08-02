@@ -64,12 +64,9 @@ class MMModem extends Gio.DBusProxy {
 
         this.connect('g-properties-changed', (me, changed, invals) => {
             const chgs = changed.deepUnpack()[0];
-            const invs = invals.deepUnpack()[0];
 
             if (chgs['AccessTechnologies'] !== undefined) {
                 this.emit('conn-type-changed', _labelFromId(chgs['AccessTechnologies']));
-            } else if (invs['AccessTechnologies'] !== undefined) {
-                this.emit('conn-type-changed', _labelFromId(invs['AccessTechnologies']));
             }
         });
     }
@@ -96,7 +93,7 @@ class MManager extends Gio.DBusProxy {
             g_interface_name: 'org.freedesktop.DBus.ObjectManager',
         });
     }
-    
+
     async getModem() {
         const objs = await new Promise((resolve, reject) => {
             this.call('GetManagedObjects',
