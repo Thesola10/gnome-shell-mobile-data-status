@@ -39,6 +39,7 @@ class MobileDataLabel {
     async connectModem() {
         this._modem = await this._manager.getModem();
 
+        this._label.set_text(await this._modem.getConnType())
         this._modem.connect('conn-type-changed', (m, txt) => {
             this._label.set_text(txt)
         });

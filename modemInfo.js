@@ -66,15 +66,35 @@ class MMModem extends Gio.DBusProxy {
         this.connect('g-properties-changed', (me, changed, invals) => {
             const chgs = changed.deepUnpack()[0];
 
-            if (chgs['AccessTechnologies'] !== undefined) {
+            if (chgs['AccessTechnologies'] != null)
                 this.emit('conn-type-changed', _labelFromId(chgs['AccessTechnologies']));
-            }
         });
     }
 
-    getConnType() {
-        const pif = this.get_cached_property('AccessTechnologies').deepUnpack()[0]
-        console.log(pif)
+    async getConnType() {
+        const pif = await new Promise((resolve, reject) =>
+        this.g_connection.call(
+            this.g_name,
+            this.g_object_path,
+            'org.freedesktop.DBus.Properties',
+            'Get',
+            new GLib.Variant('(ss)', [
+                this.g_interface_name,
+                'AccessTechnologies'
+            ]),
+            null,
+            Gio.DBusCallFlags.NONE,
+            -1, null,
+            (proxy, res) => {
+                try {
+                    const variant = proxy.call_finish(res);
+                    resolve(variant.deepUnpack()[0]);
+                } catch (e) {
+                    Gio.DBusError.strip_remote_error(e);
+                    reject(e);
+                }
+            })
+        );
         return _labelFromId(pif);
     }
 })
