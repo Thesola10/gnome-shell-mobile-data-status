@@ -21,6 +21,7 @@ class MobileDataLabel {
     constructor() {
         this._label = new St.Label();
         this._label.set_y_align(2);
+        this._manager = new ModemInfo.ModemManager();
     }
 
     onParamChanged() {}
@@ -29,19 +30,27 @@ class MobileDataLabel {
         if (netIcon._mainConnection.type == "gsm") {
             netIcon.insert_child_at_index(this._label, 0);
             this._label.set_margin_left(6);
-            this._label.set_text("LTE"); //TODO: replace with real info
         } else {
             netIcon.remove_child(this._label);
         }
     }
 
-    updateIndicatorLabel() {
+    //TODO: Call this whenever modem is invalidated (e.g. suspend/resume)
+    async connectModem() {
+        this._modem = await this._manager.getModem();
+
+        this._modem.connect('conn-type-changed', (m, txt) => {
+            this._label.set_text(txt)
+        });
     }
 
     enable() {
         netIcon = quickSettings._network;
-        this._listener = netIcon._getClient()
-            .then(() => netIcon._client.connect('notify::primary-connection', () => this.updateIndicatorDisplay()));
+        this._iconListener = netIcon._getClient()
+            .then(() =>
+                netIcon._client.connect('notify::primary-connection', () => this.updateIndicatorDisplay()
+            ));
+        this.connectModem().then(console.log("Modem events connected"))
     }
 
     disable() {

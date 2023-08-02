@@ -45,7 +45,12 @@ const MMModem = GObject.registerClass({
     GTypeName: "MMModem",
     Implements: [Gio.DBusInterface],
     Properties: {},
-    Signals: {}
+    Signals: {
+        'conn-type-changed': {
+            param_types: [GObject.TYPE_STRING]
+            // might as well send the new connection label
+        }
+    }
 },
 class MMModem extends Gio.DBusProxy {
     _init(opath) {
@@ -53,29 +58,24 @@ class MMModem extends Gio.DBusProxy {
             g_connection: Gio.DBus.system,
             g_name: MM_SERVICE,
             g_object_path: opath,
-            g_interface_name: 'org.freedesktop.DBus.Properties',
+            g_interface_name: MM_MODEM_SERVICE,
+            g_flags: Gio.DBusProxyFlags.GET_INVALIDATED_PROPERTIES
+        });
+
+        this.connect('g-properties-changed', (me, changed, invals) => {
+            const chgs = changed.deepUnpack()[0];
+            const invs = invals.deepUnpack()[0];
+
+            if (chgs['AccessTechnologies'] !== undefined) {
+                this.emit('conn-type-changed', _labelFromId(chgs['AccessTechnologies']));
+            } else if (invs['AccessTechnologies'] !== undefined) {
+                this.emit('conn-type-changed', _labelFromId(invs['AccessTechnologies']));
+            }
         });
     }
 
-    async getConnType() {
-        const pif = await new Promise((resolve, reject) => {
-            this.call('Get',
-                new GLib.Variant('(ss)', [
-                    MM_MODEM_SERVICE,
-                    'AccessTechnologies'
-                ]),
-                Gio.DBusCallFlags.NONE,
-                -1, null,
-                (proxy, res) => {
-                    try {
-                        const variant = proxy.call_finish(res);
-                        resolve(variant.deepUnpack()[0]);
-                    } catch (e) {
-                        Gio.DBusError.strip_remote_error(e);
-                        reject(e);
-                    }
-                });
-        });
+    getConnType() {
+        const pif = this.get_cached_property('AccessTechnologies').deepUnpack()[0]
         console.log(pif)
         return _labelFromId(pif);
     }
@@ -91,7 +91,6 @@ class MManager extends Gio.DBusProxy {
     _init() {
         super._init({
             g_connection: Gio.DBus.system,
-            //g_bus_type: Gio.BusType.SYSTEM,
             g_name: MM_SERVICE,
             g_object_path: MM_PATH,
             g_interface_name: 'org.freedesktop.DBus.ObjectManager',
@@ -99,8 +98,6 @@ class MManager extends Gio.DBusProxy {
     }
     
     async getModem() {
-        //await _proxyInit(this);
-
         const objs = await new Promise((resolve, reject) => {
             this.call('GetManagedObjects',
                 null,
