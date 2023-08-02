@@ -32,6 +32,7 @@ function _labelFromId(label) {
     case 1<<13:       return '3G+';
     case 1<<6:
     case 1<<7:
+    case 1<<6|1<<7:
     case 1<<8:        return 'H';
     case 1<<9:        return 'H+';
     case 1<<14:       return 'LTE';
