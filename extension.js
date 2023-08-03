@@ -38,7 +38,6 @@ class MobileDataLabel {
         }
     }
 
-    //TODO: Call this whenever modem is invalidated (e.g. suspend/resume)
     async connectModem() {
         if (this._modem != undefined)
             this._modem.disconnect('conn-type-changed')
@@ -54,7 +53,8 @@ class MobileDataLabel {
         netIcon = quickSettings._network;
         this._iconListener = netIcon._getClient()
             .then(() =>
-                netIcon._client.connect('notify::primary-connection', () => this.updateIndicatorDisplay()
+                netIcon._client.connect('notify::primary-connection',
+                                        this.updateIndicatorDisplay
             ));
         this.connectModem().then(console.log("Modem events connected"))
 
