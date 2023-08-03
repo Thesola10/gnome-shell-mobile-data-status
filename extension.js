@@ -22,6 +22,10 @@ class MobileDataLabel {
         this._label = new St.Label();
         this._label.set_y_align(2);
         this._manager = new ModemInfo.ModemManager();
+        this._manager.connect('modem-removed', (m, pat) => {
+            if (pat == this._modem.g_object_path)
+                this.connectModem().then(console.log("Modem events reconnected"))
+        });
     }
 
     onParamChanged() {}
@@ -36,6 +40,8 @@ class MobileDataLabel {
 
     //TODO: Call this whenever modem is invalidated (e.g. suspend/resume)
     async connectModem() {
+        if (this._modem != undefined)
+            this._modem.disconnect('conn-type-changed')
         this._modem = await this._manager.getModem();
 
         this._label.set_text(await this._modem.getConnType())

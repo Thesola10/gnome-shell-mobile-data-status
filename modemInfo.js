@@ -8,10 +8,10 @@
 
 const { GLib, Gio, GObject } = imports.gi;
 
-const MM_SERVICE = 'org.freedesktop.ModemManager1'
-const MM_MODEM_SERVICE = 'org.freedesktop.ModemManager1.Modem'
-const MM_PATH = '/org/freedesktop/ModemManager1'
-const MM_MODEM_PFX = '/org/freedesktop/ModemManager1/Modem'
+const MM_SERVICE        = 'org.freedesktop.ModemManager1'
+const MM_MODEM_SERVICE  = 'org.freedesktop.ModemManager1.Modem'
+const MM_PATH           = '/org/freedesktop/ModemManager1'
+const MM_MODEM_PFX      = '/org/freedesktop/ModemManager1/Modem'
 
 
 
@@ -108,7 +108,12 @@ var ModemManager = GObject.registerClass({
     GTypeName: 'ModemManager',
     Implements: [Gio.DBusInterface],
     Properties: {},
-    Signals: {}
+    Signals: {
+        'modem-removed': {
+            param_types: [GObject.TYPE_STRING]
+            // The object path that was removed
+        }
+    }
 },
 class MManager extends Gio.DBusProxy {
     _init() {
@@ -117,6 +122,21 @@ class MManager extends Gio.DBusProxy {
             g_name: MM_SERVICE,
             g_object_path: MM_PATH,
             g_interface_name: 'org.freedesktop.DBus.ObjectManager',
+        });
+
+
+        this.connect('g-signal', (me, sender, signal, data) => {
+            if (signal != "InterfacesRemoved")
+                return
+            const path = data.deepUnpack()[0];
+            const ifs = data.deepUnpack()[1];
+
+            for (txt of ifs) {
+                if (txt == MM_MODEM_SERVICE) {
+                    this.emit('modem-removed', path);
+                    return;
+                }
+            }
         });
     }
 
