@@ -27,11 +27,10 @@ class MobileDataLabel {
     onParamChanged() {}
 
     updateIndicatorDisplay() {
+        netIcon.remove_child(this._label);
         if (netIcon._mainConnection.type == "gsm") {
             netIcon.insert_child_at_index(this._label, 0);
             this._label.set_margin_left(6);
-        } else {
-            netIcon.remove_child(this._label);
         }
     }
 

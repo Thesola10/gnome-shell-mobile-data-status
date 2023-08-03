@@ -42,6 +42,18 @@ function _labelFromId(label) {
     }
 }
 
+function _dbusPromiseCallback(resolve, reject) {
+    return function(proxy, res) {
+        try {
+            const variant = proxy.call_finish(res);
+            resolve(variant.deepUnpack()[0]);
+        } catch (e) {
+            Gio.DBusError.strip_remote_error(e);
+            reject(e);
+        }
+    }
+}
+
 const MMModem = GObject.registerClass({
     GTypeName: "MMModem",
     Implements: [Gio.DBusInterface],
@@ -85,16 +97,7 @@ class MMModem extends Gio.DBusProxy {
             null,
             Gio.DBusCallFlags.NONE,
             -1, null,
-            (proxy, res) => {
-                try {
-                    const variant = proxy.call_finish(res);
-                    resolve(variant.deepUnpack()[0]);
-                } catch (e) {
-                    Gio.DBusError.strip_remote_error(e);
-                    reject(e);
-                }
-            })
-        );
+            _dbusPromiseCallback(resolve, reject)));
         return _labelFromId(pif);
     }
 })
@@ -117,19 +120,11 @@ class MManager extends Gio.DBusProxy {
 
     async getModem() {
         const objs = await new Promise((resolve, reject) => {
-            this.call('GetManagedObjects',
-                null,
-                Gio.DBusCallFlags.NONE,
-                -1, null,
-                (proxy, res) => {
-                    try {
-                        const variant = proxy.call_finish(res);
-                        resolve(variant.deepUnpack()[0]);
-                    } catch (e) {
-                        Gio.DBusError.strip_remote_error(e);
-                        reject(e);
-                    }
-                });
+        this.call('GetManagedObjects',
+            null,
+            Gio.DBusCallFlags.NONE,
+            -1, null,
+            _dbusPromiseCallback(resolve, reject))
         });
 
         for (const [opath, obj] of Object.entries(objs)) {
