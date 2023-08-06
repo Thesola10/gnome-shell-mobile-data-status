@@ -51,10 +51,14 @@ class MobileDataLabel {
         else
             this._modem = await this._manager.getModem();
 
-        this._label.set_text(await this._modem.getConnType())
-        this._modem.connect('conn-type-changed', (m, txt) => {
-            this._label.set_text(txt)
-        });
+        if (this._modem == null) {
+            this._label.set_text("")
+        } else {
+            this._label.set_text(this._modem.getConnType())
+            this._modem.connect('conn-type-changed', (m, txt) => {
+                this._label.set_text(txt)
+            });
+        }
         // good opportunity to reload label on boot
         this.updateIndicatorDisplay();
     }
