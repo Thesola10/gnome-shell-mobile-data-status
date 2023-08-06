@@ -24,7 +24,10 @@ class MobileDataLabel {
         this._manager = new ModemInfo.ModemManager();
         this._manager.connect('modem-removed', (m, pat) => {
             if (pat == this._modem.g_object_path)
-                this.connectModem().then(console.log("Modem events reconnected"))
+                this.connectModem().then(console.log("Modem events refreshed"));
+        });
+        this._manager.connect('modem-added', (m, mod) => {
+            this.connectModem(mod).then(console.log("New modem acquired"));
         });
     }
 
@@ -38,15 +41,22 @@ class MobileDataLabel {
         }
     }
 
-    async connectModem() {
-        if (this._modem != undefined)
-            this._modem.disconnect('conn-type-changed')
-        this._modem = await this._manager.getModem();
+    async connectModem(mdm = null) {
+        if (this._modem != undefined) {
+            this._modem.disconnect('conn-type-changed');
+            delete this._modem;
+        }
+        if (mdm != null)
+            this._modem = mdm;
+        else
+            this._modem = await this._manager.getModem();
 
         this._label.set_text(await this._modem.getConnType())
         this._modem.connect('conn-type-changed', (m, txt) => {
             this._label.set_text(txt)
         });
+        // good opportunity to reload label on boot
+        this.updateIndicatorDisplay();
     }
 
     enable() {

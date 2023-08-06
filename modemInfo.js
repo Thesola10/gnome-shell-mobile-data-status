@@ -112,6 +112,10 @@ var ModemManager = GObject.registerClass({
         'modem-removed': {
             param_types: [GObject.TYPE_STRING]
             // The object path that was removed
+        },
+        'modem-added': {
+            param_types: [MMModem]
+            // A new Modem instance for the device
         }
     }
 },
@@ -126,15 +130,22 @@ class MManager extends Gio.DBusProxy {
 
 
         this.connect('g-signal', (me, sender, signal, data) => {
-            if (signal != "InterfacesRemoved")
-                return
             const path = data.deepUnpack()[0];
             const ifs = data.deepUnpack()[1];
 
-            for (txt of ifs) {
-                if (txt == MM_MODEM_SERVICE) {
-                    this.emit('modem-removed', path);
-                    return;
+            if (signal == "InterfacesRemoved") {
+                for (txt of ifs) {
+                    if (txt == MM_MODEM_SERVICE) {
+                        this.emit('modem-removed', path);
+                        return;
+                    }
+                }
+            } else if (signal == "InterfacesAdded") {
+                for (asa of ifs.keys()) {
+                    if (asa == MM_MODEM_SERVICE) {
+                        this.emit('modem-added', new MMModem(path));
+                        return;
+                    }
                 }
             }
         });
