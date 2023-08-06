@@ -76,11 +76,11 @@ class MMModem extends Gio.DBusProxy {
         });
 
         this.connect('g-signal', (me, sender, signal, data) => {
-            const iface = data.deepUnpack()[0];
             const chgs = data.deepUnpack()[1];
 
+            console.log(chgs)
+
             if (signal == "PropertiesChanged"
-                && iface == MM_MODEM_SERVICE
                 && chgs['AccessTechnologies'] != null) {
                 this.emit('conn-type-changed',
                           _labelFromId(chgs['AccessTechnologies'].get_uint32()));

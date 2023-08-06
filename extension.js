@@ -58,6 +58,7 @@ class MobileDataLabel {
             this._modem.connect('conn-type-changed', (m, txt) => {
                 this._label.set_text(txt);
                 this.updateIndicatorDisplay();
+                console.log("Connection type updated to " + txt);
             });
         }
         // good opportunity to reload label on boot
