@@ -56,7 +56,8 @@ class MobileDataLabel {
         } else {
             this._label.set_text(this._modem.getConnType())
             this._modem.connect('conn-type-changed', (m, txt) => {
-                this._label.set_text(txt)
+                this._label.set_text(txt);
+                this.updateIndicatorDisplay();
             });
         }
         // good opportunity to reload label on boot
@@ -80,6 +81,8 @@ class MobileDataLabel {
     disable() {
         netIcon.remove_child(this._label);
         netIcon._client.disconnect(this._listener);
+        this._modem.disconnect('conn-type-changed');
+        delete this._modem;
     }
 }
 
