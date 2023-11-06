@@ -67,7 +67,7 @@ export const MMModem = GObject.registerClass({
         }
     }
 },
-export class MMModem extends Gio.DBusProxy {
+class MMModem extends Gio.DBusProxy {
     _init(opath) {
         super._init({
             g_connection: Gio.DBus.system,
@@ -122,7 +122,7 @@ export var ModemManager = GObject.registerClass({
         }
     }
 },
-export class MManager extends Gio.DBusProxy {
+class MManager extends Gio.DBusProxy {
     _init() {
         super._init({
             g_connection: Gio.DBus.system,
