@@ -6,7 +6,9 @@
  * @author Karim Vergnes <me@thesola.io>
  */
 
-const { GLib, Gio, GObject } = imports.gi;
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import GObject from 'gi://GObject';
 
 const MM_SERVICE        = 'org.freedesktop.ModemManager1'
 const MM_MODEM_SERVICE  = 'org.freedesktop.ModemManager1.Modem'
@@ -54,7 +56,7 @@ function _dbusPromiseCallback(resolve, reject) {
     }
 }
 
-const MMModem = GObject.registerClass({
+export const MMModem = GObject.registerClass({
     GTypeName: "MMModem",
     Implements: [Gio.DBusInterface],
     Properties: {},
@@ -65,7 +67,7 @@ const MMModem = GObject.registerClass({
         }
     }
 },
-class MMModem extends Gio.DBusProxy {
+export class MMModem extends Gio.DBusProxy {
     _init(opath) {
         super._init({
             g_connection: Gio.DBus.system,
@@ -105,7 +107,7 @@ class MMModem extends Gio.DBusProxy {
     }
 })
 
-var ModemManager = GObject.registerClass({
+export var ModemManager = GObject.registerClass({
     GTypeName: 'ModemManager',
     Implements: [Gio.DBusInterface],
     Properties: {},
@@ -120,7 +122,7 @@ var ModemManager = GObject.registerClass({
         }
     }
 },
-class MManager extends Gio.DBusProxy {
+export class MManager extends Gio.DBusProxy {
     _init() {
         super._init({
             g_connection: Gio.DBus.system,

@@ -7,21 +7,24 @@
  */
 
 /* exported init */
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import St from 'gi://St';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const { GLib, Gio, St } = imports.gi;
-const quickSettings = imports.ui.main.panel.statusArea.quickSettings;
-const Me = ExtensionUtils.getCurrentExtension();
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const ModemInfo = Me.imports.modemInfo;
+import { MMModem, ModemManager } from './modemInfo.js';
+
+const quickSettings = Main.panel.statusArea.quickSettings;
 
 var netIcon = quickSettings._network;
 
-class MobileDataLabel {
+export default class MobileDataLabel {
     constructor() {
         this._label = new St.Label();
         this._label.set_y_align(2);
-        this._manager = new ModemInfo.ModemManager();
+        this._manager = new ModemManager();
         this._manager.connect('modem-removed', (m, pat) => {
             if (pat == this._modem.g_object_path)
                 this.connectModem().then(console.log("Modem events refreshed"));
@@ -41,6 +44,11 @@ class MobileDataLabel {
         }
     }
 
+    updateIndicatorText(m, txt) {
+        this._label.set_text(txt);
+        this.updateIndicatorDisplay();
+    }
+
     async connectModem(mdm = null) {
         if (this._modem != undefined) {
             this._modem.disconnect('conn-type-changed');
@@ -55,11 +63,7 @@ class MobileDataLabel {
             this._label.set_text("")
         } else {
             this._label.set_text(this._modem.getConnType())
-            this._modem.connect('conn-type-changed', (m, txt) => {
-                this._label.set_text(txt);
-                this.updateIndicatorDisplay();
-                console.log("Connection type updated to " + txt);
-            });
+            this._modem.connect('conn-type-changed', this.updateIndicatorText.bind(this));
         }
         // good opportunity to reload label on boot
         this.updateIndicatorDisplay();
@@ -70,8 +74,8 @@ class MobileDataLabel {
         this._iconListener = netIcon._getClient()
             .then(() =>
                 netIcon._client.connect('notify::primary-connection',
-                                        this.updateIndicatorDisplay
-            ));
+                                        this.updateIndicatorDisplay.bind(this))
+            );
         this.connectModem().then(console.log("Modem events connected"))
 
         // if we were enabled after session start, e.g. thru extension manager
@@ -85,9 +89,4 @@ class MobileDataLabel {
         this._modem.disconnect('conn-type-changed');
         delete this._modem;
     }
-}
-
-function init() {
-    ExtensionUtils.initTranslations();
-    return new MobileDataLabel();
 }

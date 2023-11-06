@@ -1,9 +1,8 @@
 {
-    "version": 1,
     "uuid": "mobile-data-status@thesola.io",
     "name": "Mobile Data Status",
     "description": "Adds network type label to the mobile data icon in the System panel",
-    "shell-version": [ "42", "43", "44" ],
+    "shell-version": [ "45" ],
     "settings-schema": "org.gnome.shell.extensions.mobile-data-status",
     "gettext-domain": "gnome-shell-extensions-mobile-data-status",
     "url": "https://github.com/thesola10/gnome-shell-mobile-data-status"
