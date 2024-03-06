@@ -20,7 +20,7 @@ const quickSettings = Main.panel.statusArea.quickSettings;
 
 var netIcon = quickSettings._network;
 
-export default class MobileDataLabel {
+export default class MobileDataLabel extends Extension {
     constructor() {
         this._label = new St.Label();
         this._label.set_y_align(2);
